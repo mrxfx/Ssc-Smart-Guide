@@ -1,19 +1,51 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
+// src/lib/firebase.ts
+
+import { initializeApp } from "firebase/app";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+} from "firebase/auth";
+
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
+import { getDatabase } from "firebase/database";
+import { getAnalytics, isSupported } from "firebase/analytics";
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "mock-api-key",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "mock-auth-domain",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "mock-project-id",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "mock-storage-bucket",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "mock-messaging-sender-id",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "mock-app-id"
+  apiKey: "AIzaSyC9oJ2azvuXaIM_5bxn4buDbAqIjR19CDU",
+  authDomain: "mhcrftbl.firebaseapp.com",
+  databaseURL: "https://mhcrftbl-default-rtdb.firebaseio.com",
+  projectId: "mhcrftbl",
+  storageBucket: "mhcrftbl.firebasestorage.app",
+  messagingSenderId: "1036525734484",
+  appId: "1:1036525734484:web:18ea1219ebb0fd40c3bbc1",
+  measurementId: "G-QTE3E7K5FJ",
 };
 
 export const app = initializeApp(firebaseConfig);
+
 export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const rtdb = getDatabase(app);
+export const storage = getStorage(app);
+
 export const googleProvider = new GoogleAuthProvider();
 
-export const isFirebaseConfigured = !!import.meta.env.VITE_FIREBASE_API_KEY;
+export const isFirebaseConfigured = true;
 
-export { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut };
+isSupported().then((yes) => {
+  if (yes) {
+    getAnalytics(app);
+  }
+});
+
+export {
+  signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+};
