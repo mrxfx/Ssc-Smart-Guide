@@ -1,0 +1,17 @@
+{
+  "name": "SSC GD Smart Coach",
+  "short_name": "Smart Coach",
+  "description": "Comprehensive exam preparation platform for SSC GD aspirants.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

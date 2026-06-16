@@ -1,0 +1,1 @@
+- [SSC GD Project Stack](ssc-gd-stack.md) — React+Vite frontend, Express 5 API, PostgreSQL+Drizzle, Firebase auth (frontend only), OpenAI for AI coach.

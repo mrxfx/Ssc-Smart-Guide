@@ -1,22 +1,41 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: SSC GD Smart Coach API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: users
+    description: User management
+  - name: tests
+    description: Mock test system
+  - name: questions
+    description: Questions and PYQs
+  - name: notes
+    description: Study materials
+  - name: quiz
+    description: Daily quiz
+  - name: videos
+    description: Video learning
+  - name: ai
+    description: AI features
+  - name: leaderboard
+    description: Rankings
+  - name: admin
+    description: Admin panel
+  - name: notifications
+    description: Notifications
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +43,870 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ─── USERS ───────────────────────────────────────────────────────────────
+  /users/profile:
+    get:
+      operationId: getUserProfile
+      tags: [users]
+      summary: Get current user profile
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+    patch:
+      operationId: updateUserProfile
+      tags: [users]
+      summary: Update user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserProfileUpdate"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+  /users/dashboard:
+    get:
+      operationId: getDashboardStats
+      tags: [users]
+      summary: Get student dashboard statistics
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /users/progress:
+    get:
+      operationId: getUserProgress
+      tags: [users]
+      summary: Get user progress and analytics
+      responses:
+        "200":
+          description: Progress data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProgress"
+
+  /users/achievements:
+    get:
+      operationId: getUserAchievements
+      tags: [users]
+      summary: Get user badges and achievements
+      responses:
+        "200":
+          description: Achievements list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Achievement"
+
+  /users/streak:
+    get:
+      operationId: getUserStreak
+      tags: [users]
+      summary: Get study streak info
+      responses:
+        "200":
+          description: Streak data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StreakInfo"
+    post:
+      operationId: updateStreak
+      tags: [users]
+      summary: Update daily streak
+      responses:
+        "200":
+          description: Updated streak
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StreakInfo"
+
+  # ─── MOCK TESTS ──────────────────────────────────────────────────────────
+  /tests:
+    get:
+      operationId: listTests
+      tags: [tests]
+      summary: List all available tests
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [full, chapter, pyq]
+        - name: subject
+          in: query
+          schema:
+            type: string
+        - name: isPremium
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Tests list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Test"
+
+  /tests/{id}:
+    get:
+      operationId: getTest
+      tags: [tests]
+      summary: Get test with questions
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Test with questions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TestWithQuestions"
+
+  /tests/{id}/submit:
+    post:
+      operationId: submitTest
+      tags: [tests]
+      summary: Submit test answers and get result
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestSubmission"
+      responses:
+        "200":
+          description: Test result with analysis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TestResult"
+
+  /tests/history:
+    get:
+      operationId: getTestHistory
+      tags: [tests]
+      summary: Get user's test history
+      responses:
+        "200":
+          description: Test history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TestAttempt"
+
+  /tests/leaderboard/{testId}:
+    get:
+      operationId: getTestLeaderboard
+      tags: [tests]
+      summary: Get rank leaderboard for a test
+      parameters:
+        - name: testId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Leaderboard
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LeaderboardEntry"
+
+  # ─── QUESTIONS ───────────────────────────────────────────────────────────
+  /questions:
+    get:
+      operationId: listQuestions
+      tags: [questions]
+      summary: List questions with filters
+      parameters:
+        - name: subject
+          in: query
+          schema:
+            type: string
+        - name: year
+          in: query
+          schema:
+            type: integer
+        - name: topic
+          in: query
+          schema:
+            type: string
+        - name: difficulty
+          in: query
+          schema:
+            type: string
+            enum: [easy, medium, hard]
+        - name: isPYQ
+          in: query
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Questions list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedQuestions"
+
+  /questions/{id}:
+    get:
+      operationId: getQuestion
+      tags: [questions]
+      summary: Get question with solution
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Question detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionDetail"
+
+  /questions/{id}/bookmark:
+    post:
+      operationId: bookmarkQuestion
+      tags: [questions]
+      summary: Bookmark a question
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Bookmark status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookmarkStatus"
+
+  /questions/bookmarks:
+    get:
+      operationId: getBookmarkedQuestions
+      tags: [questions]
+      summary: Get bookmarked questions
+      responses:
+        "200":
+          description: Bookmarked questions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Question"
+
+  /questions/pyq/years:
+    get:
+      operationId: getPYQYears
+      tags: [questions]
+      summary: Get available PYQ years
+      responses:
+        "200":
+          description: Years list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PYQYear"
+
+  # ─── NOTES ───────────────────────────────────────────────────────────────
+  /notes:
+    get:
+      operationId: listNotes
+      tags: [notes]
+      summary: List study notes/PDFs
+      parameters:
+        - name: subject
+          in: query
+          schema:
+            type: string
+        - name: chapter
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: isPremium
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Notes list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Note"
+
+  /notes/{id}:
+    get:
+      operationId: getNote
+      tags: [notes]
+      summary: Get note details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Note detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+
+  /notes/{id}/bookmark:
+    post:
+      operationId: bookmarkNote
+      tags: [notes]
+      summary: Bookmark a note
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Bookmark status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookmarkStatus"
+
+  /notes/bookmarks:
+    get:
+      operationId: getBookmarkedNotes
+      tags: [notes]
+      summary: Get bookmarked notes
+      responses:
+        "200":
+          description: Bookmarked notes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Note"
+
+  /notes/subjects:
+    get:
+      operationId: getNoteSubjects
+      tags: [notes]
+      summary: Get note subjects/categories
+      responses:
+        "200":
+          description: Subjects list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Subject"
+
+  # ─── QUIZ ────────────────────────────────────────────────────────────────
+  /quiz/daily:
+    get:
+      operationId: getDailyQuiz
+      tags: [quiz]
+      summary: Get today's daily quiz
+      responses:
+        "200":
+          description: Daily quiz
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyQuiz"
+
+  /quiz/daily/submit:
+    post:
+      operationId: submitDailyQuiz
+      tags: [quiz]
+      summary: Submit daily quiz answers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuizSubmission"
+      responses:
+        "200":
+          description: Quiz result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizResult"
+
+  /quiz/current-affairs:
+    get:
+      operationId: getCurrentAffairs
+      tags: [quiz]
+      summary: Get current affairs questions
+      parameters:
+        - name: date
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Current affairs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Question"
+
+  # ─── VIDEOS ──────────────────────────────────────────────────────────────
+  /videos:
+    get:
+      operationId: listVideos
+      tags: [videos]
+      summary: List video lessons
+      parameters:
+        - name: subject
+          in: query
+          schema:
+            type: string
+        - name: isPremium
+          in: query
+          schema:
+            type: boolean
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Videos list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Video"
+
+  /videos/{id}:
+    get:
+      operationId: getVideo
+      tags: [videos]
+      summary: Get video details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Video detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Video"
+
+  /videos/{id}/progress:
+    post:
+      operationId: updateVideoProgress
+      tags: [videos]
+      summary: Update video watch progress
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VideoProgressUpdate"
+      responses:
+        "200":
+          description: Updated progress
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VideoProgress"
+
+  /videos/categories:
+    get:
+      operationId: getVideoCategories
+      tags: [videos]
+      summary: Get video categories
+      responses:
+        "200":
+          description: Categories list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Subject"
+
+  # ─── AI ──────────────────────────────────────────────────────────────────
+  /ai/ask:
+    post:
+      operationId: askAI
+      tags: [ai]
+      summary: Ask AI a doubt or question
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AIAskInput"
+      responses:
+        "200":
+          description: AI response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AIResponse"
+
+  /ai/explain:
+    post:
+      operationId: explainQuestion
+      tags: [ai]
+      summary: Get AI explanation for a question
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AIExplainInput"
+      responses:
+        "200":
+          description: AI explanation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AIResponse"
+
+  /ai/study-plan:
+    post:
+      operationId: generateStudyPlan
+      tags: [ai]
+      summary: Generate personalized study plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudyPlanInput"
+      responses:
+        "200":
+          description: Study plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudyPlan"
+
+  /ai/analyze-test:
+    post:
+      operationId: analyzeTestResult
+      tags: [ai]
+      summary: AI analysis of test performance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestAnalysisInput"
+      responses:
+        "200":
+          description: AI analysis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AIResponse"
+
+  /ai/chat:
+    post:
+      operationId: chatWithAI
+      tags: [ai]
+      summary: Chat with AI assistant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AIChatInput"
+      responses:
+        "200":
+          description: AI chat response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AIResponse"
+
+  /ai/chat/history:
+    get:
+      operationId: getChatHistory
+      tags: [ai]
+      summary: Get AI chat history
+      responses:
+        "200":
+          description: Chat history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatMessage"
+
+  # ─── LEADERBOARD ─────────────────────────────────────────────────────────
+  /leaderboard:
+    get:
+      operationId: getGlobalLeaderboard
+      tags: [leaderboard]
+      summary: Get global leaderboard
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [daily, weekly, monthly, alltime]
+      responses:
+        "200":
+          description: Global leaderboard
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LeaderboardEntry"
+
+  # ─── NOTIFICATIONS ───────────────────────────────────────────────────────
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: Get user notifications
+      responses:
+        "200":
+          description: Notifications list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  /notifications/{id}/read:
+    post:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark notification as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookmarkStatus"
+
+  # ─── ADMIN ───────────────────────────────────────────────────────────────
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [admin]
+      summary: Get admin dashboard statistics
+      responses:
+        "200":
+          description: Admin stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
+  /admin/users:
+    get:
+      operationId: listAdminUsers
+      tags: [admin]
+      summary: List all users (admin)
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: isPremium
+          in: query
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Users list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedUsers"
+
+  /admin/tests:
+    post:
+      operationId: createTest
+      tags: [admin]
+      summary: Create a new test (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestInput"
+      responses:
+        "201":
+          description: Created test
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Test"
+
+  /admin/questions:
+    post:
+      operationId: createQuestion
+      tags: [admin]
+      summary: Create a new question (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuestionInput"
+      responses:
+        "201":
+          description: Created question
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Question"
+
+  /admin/notes:
+    post:
+      operationId: createNote
+      tags: [admin]
+      summary: Create/upload a note (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NoteInput"
+      responses:
+        "201":
+          description: Created note
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+
+  /admin/videos:
+    post:
+      operationId: createVideo
+      tags: [admin]
+      summary: Create a video entry (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VideoInput"
+      responses:
+        "201":
+          description: Created video
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Video"
+
+  /admin/notifications:
+    post:
+      operationId: sendNotification
+      tags: [admin]
+      summary: Send notification to users (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationInput"
+      responses:
+        "200":
+          description: Sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookmarkStatus"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +914,648 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    # ─── User ───────────────────────────────────────────────────────────────
+    UserProfile:
+      type: object
+      required: [id, name, email, role, isPremium, joinedAt]
+      properties:
+        id:          { type: string }
+        name:        { type: string }
+        email:       { type: string }
+        phone:       { type: ["string", "null"] }
+        avatar:      { type: ["string", "null"] }
+        role:        { type: string, enum: [student, admin] }
+        isPremium:   { type: boolean }
+        premiumExpiresAt: { type: ["string", "null"] }
+        totalPoints: { type: integer }
+        rank:        { type: integer }
+        joinedAt:    { type: string }
+        studyHours:  { type: number }
+        targetExam:  { type: string }
+
+    UserProfileUpdate:
+      type: object
+      properties:
+        name:       { type: string }
+        phone:      { type: string }
+        avatar:     { type: string }
+        targetExam: { type: string }
+
+    DashboardStats:
+      type: object
+      required: [testsAttempted, averageScore, studyHours, rank, streak, notesRead, videosWatched, quizScore]
+      properties:
+        testsAttempted:   { type: integer }
+        averageScore:     { type: number }
+        studyHours:       { type: number }
+        rank:             { type: integer }
+        totalStudents:    { type: integer }
+        streak:           { type: integer }
+        notesRead:        { type: integer }
+        videosWatched:    { type: integer }
+        quizScore:        { type: number }
+        weeklyProgress:
+          type: array
+          items:
+            type: object
+            required: [day, score, hours]
+            properties:
+              day:   { type: string }
+              score: { type: number }
+              hours: { type: number }
+        subjectWise:
+          type: array
+          items:
+            type: object
+            required: [subject, score, total]
+            properties:
+              subject: { type: string }
+              score:   { type: number }
+              total:   { type: number }
+
+    UserProgress:
+      type: object
+      required: [overall, subjects, recentTests]
+      properties:
+        overall:
+          type: object
+          required: [accuracy, attempted, correct, incorrect, skipped]
+          properties:
+            accuracy:  { type: number }
+            attempted: { type: integer }
+            correct:   { type: integer }
+            incorrect: { type: integer }
+            skipped:   { type: integer }
+        subjects:
+          type: array
+          items:
+            type: object
+            required: [subject, accuracy, attempted]
+            properties:
+              subject:  { type: string }
+              accuracy: { type: number }
+              attempted: { type: integer }
+        recentTests:
+          type: array
+          items:
+            $ref: "#/components/schemas/TestAttempt"
+
+    Achievement:
+      type: object
+      required: [id, title, description, icon, earnedAt, type]
+      properties:
+        id:          { type: string }
+        title:       { type: string }
+        description: { type: string }
+        icon:        { type: string }
+        earnedAt:    { type: ["string", "null"] }
+        type:        { type: string }
+        isEarned:    { type: boolean }
+
+    StreakInfo:
+      type: object
+      required: [currentStreak, longestStreak, lastStudyDate, todayCompleted]
+      properties:
+        currentStreak:  { type: integer }
+        longestStreak:  { type: integer }
+        lastStudyDate:  { type: string }
+        todayCompleted: { type: boolean }
+        weekDays:
+          type: array
+          items:
+            type: object
+            required: [date, completed]
+            properties:
+              date:      { type: string }
+              completed: { type: boolean }
+
+    # ─── Test ───────────────────────────────────────────────────────────────
+    Test:
+      type: object
+      required: [id, title, type, subject, totalQuestions, duration, maxMarks, negativeMarking, isPremium, attempts]
+      properties:
+        id:              { type: string }
+        title:           { type: string }
+        type:            { type: string, enum: [full, chapter, pyq] }
+        subject:         { type: ["string", "null"] }
+        totalQuestions:  { type: integer }
+        duration:        { type: integer }
+        maxMarks:        { type: number }
+        negativeMarking: { type: number }
+        isPremium:       { type: boolean }
+        attempts:        { type: integer }
+        year:            { type: ["integer", "null"] }
+        description:     { type: ["string", "null"] }
+        createdAt:       { type: string }
+
+    TestWithQuestions:
+      type: object
+      required: [id, title, type, duration, negativeMarking, questions]
+      properties:
+        id:              { type: string }
+        title:           { type: string }
+        type:            { type: string }
+        duration:        { type: integer }
+        negativeMarking: { type: number }
+        maxMarks:        { type: number }
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/TestQuestion"
+
+    TestQuestion:
+      type: object
+      required: [id, text, options, marks]
+      properties:
+        id:       { type: string }
+        text:     { type: string }
+        options:
+          type: array
+          items:
+            type: object
+            required: [id, text]
+            properties:
+              id:   { type: string }
+              text: { type: string }
+        marks:    { type: number }
+        subject:  { type: ["string", "null"] }
+        topic:    { type: ["string", "null"] }
+
+    TestSubmission:
+      type: object
+      required: [answers, timeTaken]
+      properties:
+        answers:
+          type: array
+          items:
+            type: object
+            required: [questionId, selectedOption]
+            properties:
+              questionId:     { type: string }
+              selectedOption: { type: ["string", "null"] }
+        timeTaken: { type: integer }
+
+    TestResult:
+      type: object
+      required: [testId, score, maxMarks, correct, incorrect, skipped, accuracy, rank, timeTaken, answers]
+      properties:
+        testId:     { type: string }
+        score:      { type: number }
+        maxMarks:   { type: number }
+        correct:    { type: integer }
+        incorrect:  { type: integer }
+        skipped:    { type: integer }
+        accuracy:   { type: number }
+        rank:       { type: integer }
+        totalAttempts: { type: integer }
+        timeTaken:  { type: integer }
+        percentile: { type: number }
+        answers:
+          type: array
+          items:
+            type: object
+            required: [questionId, selectedOption, correctOption, isCorrect, explanation]
+            properties:
+              questionId:     { type: string }
+              selectedOption: { type: ["string", "null"] }
+              correctOption:  { type: string }
+              isCorrect:      { type: boolean }
+              explanation:    { type: string }
+        subjectWise:
+          type: array
+          items:
+            type: object
+            required: [subject, correct, total]
+            properties:
+              subject: { type: string }
+              correct: { type: integer }
+              total:   { type: integer }
+
+    TestAttempt:
+      type: object
+      required: [id, testId, testTitle, score, maxMarks, accuracy, attemptedAt, rank]
+      properties:
+        id:          { type: string }
+        testId:      { type: string }
+        testTitle:   { type: string }
+        score:       { type: number }
+        maxMarks:    { type: number }
+        accuracy:    { type: number }
+        attemptedAt: { type: string }
+        rank:        { type: integer }
+        timeTaken:   { type: integer }
+
+    LeaderboardEntry:
+      type: object
+      required: [rank, userId, name, avatar, score, accuracy]
+      properties:
+        rank:     { type: integer }
+        userId:   { type: string }
+        name:     { type: string }
+        avatar:   { type: ["string", "null"] }
+        score:    { type: number }
+        accuracy: { type: number }
+        isCurrentUser: { type: boolean }
+
+    TestInput:
+      type: object
+      required: [title, type, duration, negativeMarking]
+      properties:
+        title:           { type: string }
+        type:            { type: string, enum: [full, chapter, pyq] }
+        subject:         { type: string }
+        duration:        { type: integer }
+        negativeMarking: { type: number }
+        isPremium:       { type: boolean }
+        year:            { type: integer }
+        description:     { type: string }
+
+    # ─── Question ───────────────────────────────────────────────────────────
+    Question:
+      type: object
+      required: [id, text, options, correctOption, subject, difficulty]
+      properties:
+        id:             { type: string }
+        text:           { type: string }
+        options:
+          type: array
+          items:
+            type: object
+            required: [id, text]
+            properties:
+              id:   { type: string }
+              text: { type: string }
+        correctOption:  { type: string }
+        explanation:    { type: ["string", "null"] }
+        subject:        { type: string }
+        topic:          { type: ["string", "null"] }
+        difficulty:     { type: string, enum: [easy, medium, hard] }
+        year:           { type: ["integer", "null"] }
+        isPYQ:          { type: boolean }
+        isBookmarked:   { type: boolean }
+
+    QuestionDetail:
+      type: object
+      required: [id, text, options, correctOption, explanation, subject, difficulty]
+      properties:
+        id:            { type: string }
+        text:          { type: string }
+        options:
+          type: array
+          items:
+            type: object
+            required: [id, text]
+            properties:
+              id:   { type: string }
+              text: { type: string }
+        correctOption: { type: string }
+        explanation:   { type: string }
+        subject:       { type: string }
+        topic:         { type: ["string", "null"] }
+        difficulty:    { type: string }
+        year:          { type: ["integer", "null"] }
+        isPYQ:         { type: boolean }
+        isBookmarked:  { type: boolean }
+        aiExplanation: { type: ["string", "null"] }
+
+    PaginatedQuestions:
+      type: object
+      required: [questions, total, page, limit]
+      properties:
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Question"
+        total: { type: integer }
+        page:  { type: integer }
+        limit: { type: integer }
+
+    PYQYear:
+      type: object
+      required: [year, count]
+      properties:
+        year:  { type: integer }
+        count: { type: integer }
+
+    QuestionInput:
+      type: object
+      required: [text, options, correctOption, subject, difficulty]
+      properties:
+        text:
+          type: string
+        options:
+          type: array
+          items:
+            type: object
+            required: [id, text]
+            properties:
+              id:   { type: string }
+              text: { type: string }
+        correctOption: { type: string }
+        explanation:   { type: string }
+        subject:       { type: string }
+        topic:         { type: string }
+        difficulty:    { type: string, enum: [easy, medium, hard] }
+        year:          { type: integer }
+        isPYQ:         { type: boolean }
+
+    BookmarkStatus:
+      type: object
+      required: [success, isBookmarked]
+      properties:
+        success:    { type: boolean }
+        isBookmarked: { type: boolean }
+
+    # ─── Note ───────────────────────────────────────────────────────────────
+    Note:
+      type: object
+      required: [id, title, subject, chapter, fileUrl, isPremium, downloadCount]
+      properties:
+        id:            { type: string }
+        title:         { type: string }
+        subject:       { type: string }
+        chapter:       { type: string }
+        description:   { type: ["string", "null"] }
+        fileUrl:       { type: string }
+        thumbnailUrl:  { type: ["string", "null"] }
+        fileSize:      { type: ["string", "null"] }
+        isPremium:     { type: boolean }
+        downloadCount: { type: integer }
+        isBookmarked:  { type: boolean }
+        createdAt:     { type: string }
+
+    NoteInput:
+      type: object
+      required: [title, subject, chapter, fileUrl]
+      properties:
+        title:        { type: string }
+        subject:      { type: string }
+        chapter:      { type: string }
+        description:  { type: string }
+        fileUrl:      { type: string }
+        thumbnailUrl: { type: string }
+        fileSize:     { type: string }
+        isPremium:    { type: boolean }
+
+    Subject:
+      type: object
+      required: [id, name, icon, count]
+      properties:
+        id:    { type: string }
+        name:  { type: string }
+        icon:  { type: string }
+        count: { type: integer }
+        color: { type: ["string", "null"] }
+
+    # ─── Quiz ───────────────────────────────────────────────────────────────
+    DailyQuiz:
+      type: object
+      required: [id, date, title, questions, isCompleted]
+      properties:
+        id:          { type: string }
+        date:        { type: string }
+        title:       { type: string }
+        type:        { type: string, enum: [gk, currentAffairs, mixed] }
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/TestQuestion"
+        isCompleted: { type: boolean }
+        userScore:   { type: ["number", "null"] }
+
+    QuizSubmission:
+      type: object
+      required: [quizId, answers]
+      properties:
+        quizId: { type: string }
+        answers:
+          type: array
+          items:
+            type: object
+            required: [questionId, selectedOption]
+            properties:
+              questionId:     { type: string }
+              selectedOption: { type: ["string", "null"] }
+
+    QuizResult:
+      type: object
+      required: [quizId, score, total, correct, incorrect, streakUpdated]
+      properties:
+        quizId:        { type: string }
+        score:         { type: number }
+        total:         { type: integer }
+        correct:       { type: integer }
+        incorrect:     { type: integer }
+        streakUpdated: { type: boolean }
+        newStreak:     { type: integer }
+        answers:
+          type: array
+          items:
+            type: object
+            required: [questionId, isCorrect, correctOption, explanation]
+            properties:
+              questionId:     { type: string }
+              isCorrect:      { type: boolean }
+              correctOption:  { type: string }
+              explanation:    { type: string }
+
+    # ─── Video ───────────────────────────────────────────────────────────────
+    Video:
+      type: object
+      required: [id, title, subject, duration, isPremium, thumbnailUrl, views]
+      properties:
+        id:           { type: string }
+        title:        { type: string }
+        subject:      { type: string }
+        topic:        { type: ["string", "null"] }
+        description:  { type: ["string", "null"] }
+        videoUrl:     { type: ["string", "null"] }
+        thumbnailUrl: { type: string }
+        duration:     { type: integer }
+        isPremium:    { type: boolean }
+        instructor:   { type: string }
+        views:        { type: integer }
+        progress:     { type: ["number", "null"] }
+        createdAt:    { type: string }
+
+    VideoProgressUpdate:
+      type: object
+      required: [watchedSeconds, totalSeconds]
+      properties:
+        watchedSeconds: { type: integer }
+        totalSeconds:   { type: integer }
+
+    VideoProgress:
+      type: object
+      required: [videoId, watchedSeconds, totalSeconds, percentage, completed]
+      properties:
+        videoId:        { type: string }
+        watchedSeconds: { type: integer }
+        totalSeconds:   { type: integer }
+        percentage:     { type: number }
+        completed:      { type: boolean }
+
+    VideoInput:
+      type: object
+      required: [title, subject, videoUrl, thumbnailUrl, duration, instructor]
+      properties:
+        title:        { type: string }
+        subject:      { type: string }
+        topic:        { type: string }
+        description:  { type: string }
+        videoUrl:     { type: string }
+        thumbnailUrl: { type: string }
+        duration:     { type: integer }
+        isPremium:    { type: boolean }
+        instructor:   { type: string }
+
+    # ─── AI ─────────────────────────────────────────────────────────────────
+    AIAskInput:
+      type: object
+      required: [question]
+      properties:
+        question: { type: string }
+        subject:  { type: string }
+        context:  { type: string }
+
+    AIExplainInput:
+      type: object
+      required: [questionId]
+      properties:
+        questionId: { type: string }
+        language:   { type: string, enum: [english, hindi] }
+
+    StudyPlanInput:
+      type: object
+      required: [targetDate, weakSubjects, studyHoursPerDay]
+      properties:
+        targetDate:        { type: string }
+        weakSubjects:
+          type: array
+          items:
+            type: string
+        studyHoursPerDay:  { type: number }
+        currentLevel:      { type: string, enum: [beginner, intermediate, advanced] }
+
+    TestAnalysisInput:
+      type: object
+      required: [testResultId]
+      properties:
+        testResultId: { type: string }
+
+    AIChatInput:
+      type: object
+      required: [message]
+      properties:
+        message:        { type: string }
+        conversationId: { type: ["string", "null"] }
+
+    AIResponse:
+      type: object
+      required: [response, conversationId]
+      properties:
+        response:       { type: string }
+        conversationId: { type: string }
+        suggestions:
+          type: array
+          items:
+            type: string
+
+    ChatMessage:
+      type: object
+      required: [id, role, content, createdAt]
+      properties:
+        id:             { type: string }
+        role:           { type: string, enum: [user, assistant] }
+        content:        { type: string }
+        conversationId: { type: string }
+        createdAt:      { type: string }
+
+    StudyPlan:
+      type: object
+      required: [plan, totalWeeks, dailyHours]
+      properties:
+        plan:       { type: string }
+        totalWeeks: { type: integer }
+        dailyHours: { type: number }
+        weeks:
+          type: array
+          items:
+            type: object
+            required: [week, topics, goals]
+            properties:
+              week:   { type: integer }
+              topics:
+                type: array
+                items:
+                  type: string
+              goals:
+                type: array
+                items:
+                  type: string
+
+    # ─── Notifications ───────────────────────────────────────────────────────
+    Notification:
+      type: object
+      required: [id, title, message, type, isRead, createdAt]
+      properties:
+        id:        { type: string }
+        title:     { type: string }
+        message:   { type: string }
+        type:      { type: string, enum: [exam, reminder, result, general] }
+        isRead:    { type: boolean }
+        createdAt: { type: string }
+
+    NotificationInput:
+      type: object
+      required: [title, message, type]
+      properties:
+        title:   { type: string }
+        message: { type: string }
+        type:    { type: string, enum: [exam, reminder, result, general] }
+        target:  { type: string, enum: [all, premium, free] }
+
+    # ─── Admin ───────────────────────────────────────────────────────────────
+    AdminStats:
+      type: object
+      required: [totalUsers, premiumUsers, totalTests, totalQuestions, totalNotes, totalVideos, revenue, activeToday]
+      properties:
+        totalUsers:     { type: integer }
+        premiumUsers:   { type: integer }
+        freeUsers:      { type: integer }
+        totalTests:     { type: integer }
+        totalQuestions: { type: integer }
+        totalNotes:     { type: integer }
+        totalVideos:    { type: integer }
+        revenue:        { type: number }
+        activeToday:    { type: integer }
+        revenueChart:
+          type: array
+          items:
+            type: object
+            required: [month, revenue]
+            properties:
+              month:   { type: string }
+              revenue: { type: number }
+        userGrowth:
+          type: array
+          items:
+            type: object
+            required: [month, count]
+            properties:
+              month: { type: string }
+              count: { type: integer }
+
+    PaginatedUsers:
+      type: object
+      required: [users, total, page, limit]
+      properties:
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserProfile"
+        total: { type: integer }
+        page:  { type: integer }
+        limit: { type: integer }
